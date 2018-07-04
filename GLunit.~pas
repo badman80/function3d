@@ -1,0 +1,109 @@
+unit GLunit;
+
+interface
+
+const
+  l_xyz=1;     // list for draw coordinate system
+  l_text=1000; // list for text
+
+procedure gl_create_form();    // here all commands, that must run on form create
+procedure gl_destroy_form();   // here all commands, that must run on form destroy
+procedure start_draw();        // procedure for drawing all
+procedure start_form_resize(width,height : integer); // procedure, that set new size of drawing area
+procedure draw_function();
+
+implementation
+uses OpenGL, tools;
+//------------------------------------------------------------------------------
+procedure glText(Lit : PChar);
+begin
+glPushMatrix();
+  glPushAttrib(GL_LIST_BIT);
+  glListBase(l_text);
+  glCallLists(Length(Lit),GL_UNSIGNED_BYTE,Lit);
+  glPopAttrib();
+glPopMatrix();
+end;
+//------------------------------------------------------------------------------
+procedure draw_function();
+var
+  n,k : integer;
+begin
+if (need_rotate=1) then Exit; // if we need rotate, we draw from other place (see rotate unit)
+glColor3d(1,1,1);
+for n:=0 to v_size-1 do
+  begin
+    if (vx[n]>5.5) or (vy[n]>5.5) or (vx[n]<-5.5) or (vy[n]<-5.5) then continue;
+    glBegin(GL_POINTS); glVertex2d(vx[n],vy[n]); glEnd();
+  end;
+end;
+//------------------------------------------------------------------------------
+procedure start_draw;
+begin
+glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+//========
+glCallList(l_xyz);
+if (v_size<>0) then draw_function();
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+procedure gl_create_form;
+var
+pos : array[0..3] of real; {3,3,3,0.5}
+dir : array[0..2] of real; {-1,-1,-1}
+mat_sp : array[0..3] of real; {1,1,1,1}
+begin
+pos[0]:=6; pos[1]:=6; pos[2]:=6; pos[3]:=0.5;
+dir[0]:=-7; dir[1]:=-7; dir[2]:=-7;
+mat_sp[0]:=1; mat_sp[1]:=1; mat_sp[2]:=1; mat_sp[3]:=1;
+
+glClearColor(0,0,0,1);
+glEnable(GL_DEPTH_TEST);
+glEnable(GL_POINT_SMOOTH);
+glShadeModel(GL_SMOOTH);
+glEnable(GL_COLOR_MATERIAL);
+//glEnable(GL_NORMALIZE);
+// Lighting
+glEnable(GL_LIGHT0);
+glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,@mat_sp);
+glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,128);
+
+glLightfv(GL_LIGHT0,GL_POSITION,@pos);
+glLightfv(GL_LIGHT0,GL_SPOT_DIRECTION,@dir);
+
+glLighti(GL_LIGHT0,GL_SPOT_EXPONENT,0);
+glLighti(GL_LIGHT0,GL_SPOT_CUTOFF,90);
+// create OpenGL list for late using
+glNewList(l_xyz,GL_COMPILE);
+// start draw coordinate system
+  glBegin(GL_LINES);
+    glColor3d(1,0,0); glVertex3d(-6,0,0); glVertex3d(6,0,0); // x
+    glColor3d(0,1,0); glVertex3d(0,-6,0); glVertex3d(0,6,0); // y
+    glColor3d(0,0,1); glVertex3d(0,0,-6); glVertex3d(0,0,6); // z
+  glEnd;
+// start drawing text (x,y,z)
+  glColor3d(1,0,0); glPushMatrix(); glTranslated(5.7,-0.5,0); glText('x'); glPopMatrix();
+  glColor3d(0,1,0); glPushMatrix(); glTranslated(0.2,5.7,0); glText('y'); glPopMatrix();
+  glColor3d(0,0,1); glPushMatrix(); glTranslated(0.2,0,5.7); glText('z'); glPopMatrix();
+glEndList();
+end;
+//------------------------------------------------------------------------------
+procedure gl_destroy_form();
+begin
+glDeleteLists(l_xyz,1);
+glDeleteLists(l_text,256);
+end;
+//------------------------------------------------------------------------------
+procedure start_form_resize(width,height : integer);
+begin
+glViewport(0,-25,width,height);
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+glOrtho(-7,7,-7,7,-7,7);
+glMatrixMode(GL_MODELVIEW);
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+end.

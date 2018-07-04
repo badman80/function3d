@@ -1,0 +1,13 @@
+y=ax
+y=ax^2
+y=ax^3
+y=a/(bx)
+y=a*sin(bx)
+y=a*cos(bx)
+y=a*tg(bx)
+y=a*ctg(bx)
+y=a*e^(bx)
+y=a*b^(cx)
+y=a*ln(bx)
+y=a*lg(bx)
+y=c*log a (bx)
